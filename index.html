@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1A1A2E">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PAR">
+<meta name="description" content="Painel Auxiliar de Remédios com alarmes e confirmação por e-mail">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<title>PAR — Painel Auxiliar de Remédios</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --manha: #FF8C00;
+  --tarde: #D32F2F;
+  --noite: #1565C0;
+  --bg: #F0F4F8;
+  --shadow: 0 4px 20px rgba(0,0,0,0.10);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,0.18);
+  --radius: 18px;
+  --radius-sm: 10px;
+}
+
+body {
+  font-family: 'Nunito', sans-serif;
+  background: var(--bg);
+  color: #1A1A2E;
+  min-height: 100vh;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* INSTALL BANNER */
+#install-banner {
+  display: none;
+  background: linear-gradient(135deg, #0F3460, #1565C0);
+  color: white;
+  padding: 14px 20px;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+#install-banner.visivel { display: flex; }
+#install-banner button {
+  margin-left: auto;
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 2px solid rgba(255,255,255,0.5);
+  background: rgba(255,255,255,0.15);
+  color: white;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+#install-banner .fechar-banner {
+  background: none; border: none; color: rgba(255,255,255,0.6);
+  font-size: 18px; padding: 0 4px; margin-left: 0;
+}
+
+/* HEADER */
+header {
+  background: linear-gradient(135deg, #1A1A2E 0%, #16213E 60%, #0F3460 100%);
+  color: white;
+  padding: 20px 20px 16px;
+  padding-top: calc(20px + env(safe-area-inset-top));
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+.header-icon {
+  width: 52px; height: 52px;
+  background: linear-gradient(135deg, #FF8C00, #D32F2F);
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(255,100,0,0.35);
+}
+.header-text h1 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 22px; font-weight: 700;
+}
+.header-text h1 span { color: #FF8C00; }
+.header-text p { font-size: 12px; opacity: 0.6; margin-top: 1px; }
+
+/* CLOCK */
+.clock-bar {
+  background: #16213E;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+}
+#relogio {
+  font-family: 'Space Grotesk', monospace;
+  font-size: 28px; font-weight: 700;
+  color: #FFD54F;
+  letter-spacing: 2px;
+}
+#data-atual { font-size: 12px; opacity: 0.55; }
+#periodo-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* NOTIF PERMISSAO */
+#notif-bar {
+  display: none;
+  background: #FFF3E0;
+  border-bottom: 2px solid #FFB74D;
+  padding: 12px 20px;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #E65100;
+  font-weight: 700;
+}
+#notif-bar.visivel { display: flex; }
+#notif-bar button {
+  margin-left: auto;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: none;
+  background: #FF8C00;
+  color: white;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* MAIN */
+main {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px 14px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* LEGENDA */
+.legenda {
+  background: white;
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  box-shadow: var(--shadow);
+}
+.legenda h3 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #607080;
+  margin-bottom: 12px;
+  font-weight: 800;
+}
+.legenda-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.leg-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 10px 6px;
+  border-radius: 10px;
+}
+.leg-dot { width: 28px; height: 28px; border-radius: 50%; }
+.leg-label { font-size: 11px; font-weight: 800; text-align: center; }
+.leg-time  { font-size: 9px;  text-align: center; opacity: 0.7; }
+
+/* CARDS */
+.periodo-card {
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  box-shadow: var(--shadow);
+  transition: box-shadow 0.3s, transform 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.periodo-card.ativo {
+  box-shadow: var(--shadow-lg);
+  transform: scale(1.01);
+}
+.periodo-card::after {
+  content: '';
+  position: absolute;
+  top: -25px; right: -25px;
+  width: 100px; height: 100px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+}
+.card-manha { background: linear-gradient(135deg, #FF8C00, #FFB300); color: white; }
+.card-tarde  { background: linear-gradient(135deg, #D32F2F, #F44336); color: white; }
+.card-noite  { background: linear-gradient(135deg, #1565C0, #1976D2); color: white; }
+.card-receita { background: white; border: 2px dashed #BDBDBD; color: #424242; }
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.card-title { display: flex; align-items: center; gap: 10px; }
+.card-icon { font-size: 24px; }
+.card-name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 18px; font-weight: 700;
+}
+.card-horario { font-size: 12px; opacity: 0.8; font-weight: 600; }
+.ativo-badge {
+  background: rgba(255,255,255,0.22);
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 10px; font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  display: none;
+}
+
+/* REMEDIOS */
+.remedios-label {
+  font-size: 11px; font-weight: 800;
+  opacity: 0.8; text-transform: uppercase;
+  letter-spacing: 0.8px; margin-bottom: 8px;
+}
+.remedio-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  margin-bottom: 5px;
+  background: rgba(255,255,255,0.18);
+  cursor: pointer;
+  transition: background 0.2s;
+  user-select: none;
+}
+.card-receita .remedio-item { background: #F5F5F5; }
+.remedio-item:hover { background: rgba(255,255,255,0.28); }
+.remedio-check {
+  width: 20px; height: 20px;
+  border-radius: 5px;
+  border: 2px solid rgba(255,255,255,0.6);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-size: 11px;
+  transition: all 0.2s;
+  font-weight: 900;
+}
+.card-receita .remedio-check { border-color: #9E9E9E; }
+.remedio-check.marcado {
+  background: rgba(255,255,255,0.9);
+  border-color: transparent;
+  color: #2E7D32;
+}
+.remedio-nome {
+  font-size: 14px; font-weight: 600; flex: 1;
+  transition: opacity 0.2s;
+}
+.remedio-item.tomado .remedio-nome {
+  text-decoration: line-through;
+  opacity: 0.55;
+}
+.del-btn {
+  font-size: 13px; opacity: 0.4;
+  padding: 2px 6px; border-radius: 6px;
+  cursor: pointer; transition: opacity 0.2s;
+  background: none; border: none; color: inherit;
+}
+.del-btn:hover { opacity: 1; }
+
+.add-remedio-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 2px dashed rgba(255,255,255,0.35);
+  background: transparent;
+  color: rgba(255,255,255,0.7);
+  font-size: 13px; font-weight: 700;
+  cursor: pointer; width: 100%;
+  transition: all 0.2s;
+  font-family: 'Nunito', sans-serif;
+  margin-bottom: 12px;
+}
+.card-receita .add-remedio-btn { border-color: #BDBDBD; color: #9E9E9E; }
+.add-remedio-btn:hover { background: rgba(255,255,255,0.15); color: white; border-color: rgba(255,255,255,0.6); }
+.card-receita .add-remedio-btn:hover { background: #F5F5F5; color: #616161; }
+
+.add-input-row {
+  display: none;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.add-input-row.visivel { display: flex; }
+.add-input-row input {
+  flex: 1; padding: 9px 12px;
+  border-radius: 9px;
+  border: 2px solid rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.15);
+  color: white;
+  font-family: 'Nunito', sans-serif;
+  font-size: 14px; font-weight: 600;
+  outline: none;
+}
+.add-input-row input::placeholder { color: rgba(255,255,255,0.55); }
+.card-receita .add-input-row input {
+  border-color: #BDBDBD;
+  background: #FAFAFA;
+  color: #1A1A2E;
+}
+.add-input-row button {
+  padding: 9px 14px;
+  border-radius: 9px; border: none;
+  background: rgba(255,255,255,0.25);
+  color: white; font-size: 16px;
+  cursor: pointer; transition: background 0.2s;
+}
+.card-receita .add-input-row button { background: #1565C0; }
+.add-input-row button:hover { background: rgba(255,255,255,0.4); }
+
+/* BOTÃO ENVIAR */
+.enviar-btn {
+  width: 100%; padding: 13px 20px;
+  border-radius: 12px; border: none;
+  background: rgba(255,255,255,0.2);
+  color: white;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px; font-weight: 700;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: all 0.2s;
+}
+.card-receita .enviar-btn { background: #1565C0; color: white; }
+.enviar-btn:hover { background: rgba(255,255,255,0.32); transform: translateY(-1px); }
+.card-receita .enviar-btn:hover { background: #0D47A1; }
+.enviar-btn:active { transform: scale(0.98); }
+
+/* SEÇÃO ALARMES */
+.alarm-section {
+  background: white;
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+.alarm-section h3 {
+  font-size: 11px; text-transform: uppercase;
+  letter-spacing: 1px; color: #607080;
+  margin-bottom: 14px; font-weight: 800;
+}
+.alarmes-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+@media (max-width: 480px) {
+  .alarmes-grid { grid-template-columns: 1fr; }
+}
+.alarme-card {
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  border: 2px solid transparent;
+}
+.alarme-manha { background: #FFF3E0; border-color: #FFB74D; }
+.alarme-tarde  { background: #FFEBEE; border-color: #EF9A9A; }
+.alarme-noite  { background: #E3F2FD; border-color: #90CAF9; }
+.alarme-label {
+  font-size: 10px; font-weight: 900;
+  text-transform: uppercase; letter-spacing: 0.8px;
+  margin-bottom: 8px;
+}
+.alarme-manha .alarme-label { color: #E65100; }
+.alarme-tarde  .alarme-label { color: #B71C1C; }
+.alarme-noite  .alarme-label { color: #0D47A1; }
+.alarme-row { display: flex; align-items: center; gap: 6px; }
+.alarme-input {
+  flex: 1; padding: 7px 8px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(0,0,0,0.15);
+  font-family: 'Space Grotesk', monospace;
+  font-size: 16px; font-weight: 700;
+  background: white;
+  color: #1A1A2E;
+  text-align: center;
+}
+.alarme-toggle {
+  width: 34px; height: 34px;
+  border-radius: 8px; border: none;
+  cursor: pointer; font-size: 15px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s; flex-shrink: 0;
+}
+.alarme-toggle.on  { background: #43A047; color: white; }
+.alarme-toggle.off { background: #E0E0E0; color: #9E9E9E; }
+.alarme-status {
+  font-size: 10px; font-weight: 700;
+  margin-top: 5px; height: 12px;
+}
+.alarme-manha .alarme-status { color: #E65100; }
+.alarme-tarde  .alarme-status { color: #B71C1C; }
+.alarme-noite  .alarme-status { color: #0D47A1; }
+
+.custom-row {
+  display: flex; gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.custom-row input[type="time"],
+.custom-row input[type="text"] {
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1.5px solid #E0E0E0;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px; font-weight: 600;
+  background: #FAFAFA; color: #1A1A2E;
+}
+.custom-row input[type="time"] { width: 120px; }
+.custom-row input[type="text"] { flex: 1; min-width: 120px; }
+.btn-add {
+  padding: 9px 16px;
+  border-radius: 10px; border: none;
+  background: #1565C0; color: white;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: all 0.2s;
+  white-space: nowrap;
+}
+.btn-add:hover { background: #0D47A1; transform: translateY(-1px); }
+.extras-lista { margin-top: 12px; display: flex; flex-direction: column; gap: 7px; }
+.extra-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px;
+  background: #F5F5F5;
+  border-radius: 10px;
+  font-size: 14px; font-weight: 600;
+}
+.extra-hora { font-family: 'Space Grotesk', monospace; color: #1565C0; font-size: 15px; }
+.extra-desc { flex: 1; }
+.extra-del {
+  background: none; border: none; cursor: pointer;
+  color: #EF5350; font-size: 16px;
+  padding: 4px; border-radius: 6px;
+  transition: background 0.2s;
+}
+.extra-del:hover { background: #FFEBEE; }
+
+/* MODAL */
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.65);
+  z-index: 9999;
+  align-items: center; justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.visivel { display: flex; }
+.modal-box {
+  background: white;
+  border-radius: 24px;
+  padding: 36px 28px;
+  text-align: center;
+  max-width: 340px; width: 100%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+  animation: popIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes popIn {
+  from { transform: scale(0.7); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+.modal-icon { font-size: 60px; margin-bottom: 14px; }
+.modal-titulo {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px; font-weight: 700; margin-bottom: 8px;
+}
+.modal-msg { font-size: 15px; color: #607080; margin-bottom: 22px; line-height: 1.5; }
+.modal-fechar {
+  width: 100%; padding: 14px;
+  border-radius: 12px; border: none;
+  background: linear-gradient(135deg, #FF8C00, #D32F2F);
+  color: white;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px; font-weight: 700;
+  cursor: pointer; transition: transform 0.2s;
+}
+.modal-fechar:hover { transform: scale(1.02); }
+
+/* TOAST */
+.toast-wrap {
+  position: fixed;
+  bottom: calc(20px + env(safe-area-inset-bottom));
+  left: 50%; transform: translateX(-50%);
+  z-index: 9998;
+  display: flex; flex-direction: column;
+  gap: 8px; align-items: center;
+  width: 90%; max-width: 380px;
+  pointer-events: none;
+}
+.toast {
+  background: #1A1A2E;
+  color: white;
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-size: 14px; font-weight: 600;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.25);
+  display: flex; align-items: center; gap: 10px;
+  width: 100%;
+  border-left: 4px solid #43A047;
+  animation: toastIn 0.3s ease;
+}
+.toast.erro  { border-left-color: #EF5350; }
+.toast.saindo { animation: toastOut 0.3s ease forwards; }
+@keyframes toastIn  { from { transform: translateY(20px); opacity:0; } to { transform: translateY(0); opacity:1; } }
+@keyframes toastOut { from { transform: translateY(0);    opacity:1; } to { transform: translateY(20px); opacity:0; } }
+</style>
+</head>
+<body>
+
+<!-- BANNER INSTALAR -->
+<div id="install-banner">
+  <span>📲 Instale o PAR no seu celular para alarmes em segundo plano!</span>
+  <button onclick="instalarApp()">Instalar</button>
+  <button class="fechar-banner" onclick="this.parentElement.classList.remove('visivel')">✕</button>
+</div>
+
+<!-- AVISO NOTIFICAÇÕES -->
+<div id="notif-bar">
+  <span>🔔 Ative as notificações para receber os alarmes!</span>
+  <button onclick="pedirNotificacao()">Ativar</button>
+</div>
+
+<header>
+  <div class="header-icon">💊</div>
+  <div class="header-text">
+    <h1><span>PAR</span> — Painel de Remédios</h1>
+    <p>Medicamentos com alarme e confirmação por e-mail</p>
+  </div>
+</header>
+
+<div class="clock-bar">
+  <div id="data-atual" style="font-size:11px;opacity:.55;"></div>
+  <div id="relogio">00:00:00</div>
+  <div id="periodo-badge">—</div>
+</div>
+
+<main>
+
+  <!-- LEGENDA -->
+  <div class="legenda">
+    <h3>🎨 Legenda de Períodos</h3>
+    <div class="legenda-grid">
+      <div class="leg-item" style="background:#FFF3E0">
+        <div class="leg-dot" style="background:#FF8C00"></div>
+        <div class="leg-label" style="color:#E65100">Manhã</div>
+        <div class="leg-time" style="color:#BF360C">06h–12h</div>
+      </div>
+      <div class="leg-item" style="background:#FFEBEE">
+        <div class="leg-dot" style="background:#D32F2F"></div>
+        <div class="leg-label" style="color:#B71C1C">Tarde</div>
+        <div class="leg-time" style="color:#880E4F">12h–18h</div>
+      </div>
+      <div class="leg-item" style="background:#E3F2FD">
+        <div class="leg-dot" style="background:#1565C0"></div>
+        <div class="leg-label" style="color:#0D47A1">Noite</div>
+        <div class="leg-time" style="color:#01579B">18h–06h</div>
+      </div>
+      <div class="leg-item" style="background:#F5F5F5;border:1.5px dashed #BDBDBD;border-radius:10px;">
+        <div class="leg-dot" style="background:#E0E0E0;border:2px dashed #9E9E9E"></div>
+        <div class="leg-label" style="color:#424242">Receita</div>
+        <div class="leg-time" style="color:#757575">prescrição</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CARD MANHÃ -->
+  <div class="periodo-card card-manha" id="card-manha">
+    <div class="card-header">
+      <div class="card-title">
+        <span class="card-icon">🌅</span>
+        <div>
+          <div class="card-name">Manhã</div>
+          <div class="card-horario">06h00 – 12h00</div>
+        </div>
+      </div>
+      <div class="ativo-badge" id="badge-manha">● AGORA</div>
+    </div>
+    <div class="remedios-label">Medicamentos</div>
+    <div id="lista-manha"></div>
+    <div class="add-input-row" id="input-manha">
+      <input type="text" id="texto-manha" placeholder="Nome do remédio...">
+      <button onclick="confirmarRemedio('manha')">✓</button>
+    </div>
+    <button class="add-remedio-btn" onclick="toggleInput('manha')">+ Adicionar remédio</button>
+    <button class="enviar-btn" onclick="enviarEmail('manha')">✉️ Confirmar tomada — Manhã</button>
+  </div>
+
+  <!-- CARD TARDE -->
+  <div class="periodo-card card-tarde" id="card-tarde">
+    <div class="card-header">
+      <div class="card-title">
+        <span class="card-icon">☀️</span>
+        <div>
+          <div class="card-name">Tarde</div>
+          <div class="card-horario">12h00 – 18h00</div>
+        </div>
+      </div>
+      <div class="ativo-badge" id="badge-tarde">● AGORA</div>
+    </div>
+    <div class="remedios-label">Medicamentos</div>
+    <div id="lista-tarde"></div>
+    <div class="add-input-row" id="input-tarde">
+      <input type="text" id="texto-tarde" placeholder="Nome do remédio...">
+      <button onclick="confirmarRemedio('tarde')">✓</button>
+    </div>
+    <button class="add-remedio-btn" onclick="toggleInput('tarde')">+ Adicionar remédio</button>
+    <button class="enviar-btn" onclick="enviarEmail('tarde')">✉️ Confirmar tomada — Tarde</button>
+  </div>
+
+  <!-- CARD NOITE -->
+  <div class="periodo-card card-noite" id="card-noite">
+    <div class="card-header">
+      <div class="card-title">
+        <span class="card-icon">🌙</span>
+        <div>
+          <div class="card-name">Noite</div>
+          <div class="card-horario">18h00 – 06h00</div>
+        </div>
+      </div>
+      <div class="ativo-badge" id="badge-noite">● AGORA</div>
+    </div>
+    <div class="remedios-label">Medicamentos</div>
+    <div id="lista-noite"></div>
+    <div class="add-input-row" id="input-noite">
+      <input type="text" id="texto-noite" placeholder="Nome do remédio...">
+      <button onclick="confirmarRemedio('noite')">✓</button>
+    </div>
+    <button class="add-remedio-btn" onclick="toggleInput('noite')">+ Adicionar remédio</button>
+    <button class="enviar-btn" onclick="enviarEmail('noite')">✉️ Confirmar tomada — Noite</button>
+  </div>
+
+  <!-- CARD RECEITA -->
+  <div class="periodo-card card-receita">
+    <div class="card-header">
+      <div class="card-title">
+        <span class="card-icon">📋</span>
+        <div>
+          <div class="card-name" style="color:#424242">Receita Médica</div>
+          <div class="card-horario" style="color:#757575">conforme prescrição</div>
+        </div>
+      </div>
+    </div>
+    <div class="remedios-label" style="color:#757575">Medicamentos prescritos</div>
+    <div id="lista-receita"></div>
+    <div class="add-input-row" id="input-receita">
+      <input type="text" id="texto-receita" placeholder="Nome do remédio...">
+      <button onclick="confirmarRemedio('receita')">✓</button>
+    </div>
+    <button class="add-remedio-btn" onclick="toggleInput('receita')">+ Adicionar remédio</button>
+    <button class="enviar-btn" onclick="enviarEmail('receita')">✉️ Confirmar tomada — Receita</button>
+  </div>
+
+  <!-- ALARMES -->
+  <div class="alarm-section">
+    <h3>⏰ Alarmes de Medicação</h3>
+    <div class="alarmes-grid">
+      <div class="alarme-card alarme-manha">
+        <div class="alarme-label">🌅 Manhã</div>
+        <div class="alarme-row">
+          <input type="time" class="alarme-input" id="hora-manha" value="08:00" onchange="salvarDados()">
+          <button class="alarme-toggle on" id="toggle-manha" onclick="toggleAlarme('manha')">🔔</button>
+        </div>
+        <div class="alarme-status" id="status-manha">Ativado</div>
+      </div>
+      <div class="alarme-card alarme-tarde">
+        <div class="alarme-label">☀️ Tarde</div>
+        <div class="alarme-row">
+          <input type="time" class="alarme-input" id="hora-tarde" value="13:00" onchange="salvarDados()">
+          <button class="alarme-toggle on" id="toggle-tarde" onclick="toggleAlarme('tarde')">🔔</button>
+        </div>
+        <div class="alarme-status" id="status-tarde">Ativado</div>
+      </div>
+      <div class="alarme-card alarme-noite">
+        <div class="alarme-label">🌙 Noite</div>
+        <div class="alarme-row">
+          <input type="time" class="alarme-input" id="hora-noite" value="20:00" onchange="salvarDados()">
+          <button class="alarme-toggle on" id="toggle-noite" onclick="toggleAlarme('noite')">🔔</button>
+        </div>
+        <div class="alarme-status" id="status-noite">Ativado</div>
+      </div>
+    </div>
+    <div style="font-size:11px;font-weight:800;color:#607080;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;">
+      + Alarme personalizado
+    </div>
+    <div class="custom-row">
+      <input type="time" id="custom-hora" value="10:00">
+      <input type="text" id="custom-desc" placeholder="Ex: Vitamina D, Insulina...">
+      <button class="btn-add" onclick="adicionarExtra()">+ Adicionar</button>
+    </div>
+    <div class="extras-lista" id="extras-lista"></div>
+  </div>
+
+</main>
+
+<!-- MODAL ALARME -->
+<div class="modal-overlay" id="modal">
+  <div class="modal-box">
+    <div class="modal-icon" id="modal-icon">⏰</div>
+    <div class="modal-titulo" id="modal-titulo">Hora do Remédio!</div>
+    <div class="modal-msg" id="modal-msg">É hora de tomar seus medicamentos.</div>
+    <button class="modal-fechar" onclick="fecharModal()">✓ Entendido</button>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+// =================== ESTADO ===================
+const EMAIL = 'carlosalbertoneto33@gmail.com';
+const state = {
+  remedios: { manha: [], tarde: [], noite: [], receita: [] },
+  alarmes: {
+    manha: { ativo: true, hora: '08:00' },
+    tarde: { ativo: true, hora: '13:00' },
+    noite: { ativo: true, hora: '20:00' }
+  },
+  extras: [],
+  disparados: {}
+};
+
+function salvarDados() {
+  state.alarmes.manha.hora = document.getElementById('hora-manha').value;
+  state.alarmes.tarde.hora = document.getElementById('hora-tarde').value;
+  state.alarmes.noite.hora = document.getElementById('hora-noite').value;
+  try {
+    localStorage.setItem('par2_remedios', JSON.stringify(state.remedios));
+    localStorage.setItem('par2_alarmes',  JSON.stringify(state.alarmes));
+    localStorage.setItem('par2_extras',   JSON.stringify(state.extras));
+  } catch(e) {}
+  enviarConfigSW();
+}
+
+function carregarDados() {
+  try {
+    const r = localStorage.getItem('par2_remedios');
+    if (r) Object.assign(state.remedios, JSON.parse(r));
+    const a = localStorage.getItem('par2_alarmes');
+    if (a) {
+      const d = JSON.parse(a);
+      Object.assign(state.alarmes, d);
+      ['manha','tarde','noite'].forEach(p => {
+        if (state.alarmes[p] && state.alarmes[p].hora) {
+          document.getElementById('hora-' + p).value = state.alarmes[p].hora;
+        }
+      });
+    }
+    const e = localStorage.getItem('par2_extras');
+    if (e) state.extras = JSON.parse(e);
+  } catch(e) {}
+}
+
+// =================== SERVICE WORKER ===================
+let swReg = null;
+async function registrarSW() {
+  if (!('serviceWorker' in navigator)) return;
+  try {
+    swReg = await navigator.serviceWorker.register('/sw.js');
+    console.log('SW registrado:', swReg.scope);
+    // Periodic Background Sync se suportado
+    if ('periodicSync' in swReg) {
+      try {
+        await swReg.periodicSync.register('verificar-alarmes', { minInterval: 60 * 1000 });
+      } catch(e) {}
+    }
+  } catch(e) { console.warn('SW falhou:', e); }
+}
+
+function enviarConfigSW() {
+  if (!navigator.serviceWorker || !navigator.serviceWorker.controller) return;
+  navigator.serviceWorker.controller.postMessage({
+    tipo: 'CONFIGURAR_ALARMES',
+    alarmes: state.alarmes,
+    extras: state.extras
+  });
+}
+
+// =================== RELÓGIO ===================
+function atualizarRelogio() {
+  const n = new Date();
+  const h = n.getHours(), m = n.getMinutes(), s = n.getSeconds();
+  const p = v => String(v).padStart(2,'0');
+  document.getElementById('relogio').textContent = `${p(h)}:${p(m)}:${p(s)}`;
+
+  const dias  = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+  const meses = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  document.getElementById('data-atual').textContent =
+    `${dias[n.getDay()]}, ${n.getDate()} ${meses[n.getMonth()]}`;
+
+  const badge = document.getElementById('periodo-badge');
+  if      (h >= 6 && h < 12) { badge.textContent = '🌅 Manhã';  badge.style.cssText = 'background:#FF8C00;color:white;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:800;'; destacar('manha'); }
+  else if (h >= 12 && h < 18){ badge.textContent = '☀️ Tarde';  badge.style.cssText = 'background:#D32F2F;color:white;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:800;'; destacar('tarde'); }
+  else                        { badge.textContent = '🌙 Noite';  badge.style.cssText = 'background:#1565C0;color:white;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:800;'; destacar('noite'); }
+
+  if (s === 0) verificarAlarmes(h, m);
+}
+
+function destacar(p) {
+  ['manha','tarde','noite'].forEach(x => {
+    document.getElementById('card-' + x).classList.toggle('ativo', x === p);
+    document.getElementById('badge-' + x).style.display = x === p ? 'block' : 'none';
+  });
+}
+
+// =================== ALARMES ===================
+function verificarAlarmes(h, m) {
+  const pad = v => String(v).padStart(2,'0');
+  const agora = `${pad(h)}:${pad(m)}`;
+
+  // Envia tick pro SW (backup)
+  if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage({
+      tipo: 'TICK', horaAtual: agora,
+      alarmes: state.alarmes, extras: state.extras
+    });
+  }
+
+  // Verifica localmente (quando app está aberto)
+  const ps = [
+    { id:'manha', nome:'Manhã', icone:'🌅' },
+    { id:'tarde', nome:'Tarde', icone:'☀️' },
+    { id:'noite', nome:'Noite', icone:'🌙' }
+  ];
+  ps.forEach(p => {
+    const cfg = state.alarmes[p.id];
+    if (!cfg || !cfg.ativo) return;
+    const chave = p.id + cfg.hora + agora;
+    if (cfg.hora === agora && !state.disparados[chave]) {
+      state.disparados[chave] = true;
+      dispararAlarme(p.nome, p.icone, `Hora de tomar os remédios da ${p.nome}!`);
+    }
+  });
+
+  state.extras.forEach((ex, i) => {
+    if (!ex.ativo) return;
+    const chave = 'extra' + i + agora;
+    if (ex.hora === agora && !state.disparados[chave]) {
+      state.disparados[chave] = true;
+      dispararAlarme(ex.desc || 'Remédio', '⏰', `Lembrete: ${ex.desc}!`);
+    }
+  });
+}
+
+function dispararAlarme(titulo, icone, msg) {
+  document.getElementById('modal-icon').textContent = icone;
+  document.getElementById('modal-titulo').textContent = `${titulo} — Hora do Remédio!`;
+  document.getElementById('modal-msg').textContent = msg;
+  document.getElementById('modal').classList.add('visivel');
+  tocarSom();
+  if (navigator.vibrate) navigator.vibrate([400, 200, 400, 200, 400]);
+}
+
+function tocarSom() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [0, 0.5, 1.0].forEach(t => {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = 880; osc.type = 'sine';
+      gain.gain.setValueAtTime(0.3, ctx.currentTime + t);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.35);
+      osc.start(ctx.currentTime + t);
+      osc.stop(ctx.currentTime + t + 0.4);
+    });
+  } catch(e) {}
+}
+
+function fecharModal() {
+  document.getElementById('modal').classList.remove('visivel');
+}
+
+function toggleAlarme(p) {
+  state.alarmes[p].ativo = !state.alarmes[p].ativo;
+  const btn = document.getElementById('toggle-' + p);
+  const st  = document.getElementById('status-' + p);
+  if (state.alarmes[p].ativo) {
+    btn.className = 'alarme-toggle on'; btn.textContent = '🔔'; st.textContent = 'Ativado';
+  } else {
+    btn.className = 'alarme-toggle off'; btn.textContent = '🔕'; st.textContent = 'Desativado';
+  }
+  salvarDados();
+}
+
+function adicionarExtra() {
+  const hora = document.getElementById('custom-hora').value;
+  const desc = document.getElementById('custom-desc').value.trim() || 'Remédio';
+  if (!hora) return toast('Defina um horário!', 'erro');
+  state.extras.push({ hora, desc, ativo: true });
+  document.getElementById('custom-desc').value = '';
+  salvarDados();
+  renderExtras();
+  toast(`⏰ Alarme ${hora} — ${desc} adicionado!`);
+}
+
+function removerExtra(i) {
+  state.extras.splice(i, 1);
+  salvarDados();
+  renderExtras();
+}
+
+function renderExtras() {
+  const el = document.getElementById('extras-lista');
+  el.innerHTML = state.extras.map((e, i) => `
+    <div class="extra-item">
+      <span class="extra-hora">⏰ ${e.hora}</span>
+      <span class="extra-desc">${e.desc}</span>
+      <button class="extra-del" onclick="removerExtra(${i})">🗑</button>
+    </div>
+  `).join('');
+}
+
+// =================== REMÉDIOS ===================
+function toggleInput(p) {
+  const el = document.getElementById('input-' + p);
+  el.classList.toggle('visivel');
+  if (el.classList.contains('visivel'))
+    document.getElementById('texto-' + p).focus();
+}
+
+['manha','tarde','noite','receita'].forEach(p => {
+  document.getElementById('texto-' + p)?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') confirmarRemedio(p);
+  });
+});
+
+function confirmarRemedio(p) {
+  const input = document.getElementById('texto-' + p);
+  const nome = input.value.trim();
+  if (!nome) return;
+  state.remedios[p].push({ nome, tomado: false });
+  input.value = '';
+  document.getElementById('input-' + p).classList.remove('visivel');
+  salvarDados();
+  renderLista(p);
+}
+
+function toggleTomado(p, i) {
+  state.remedios[p][i].tomado = !state.remedios[p][i].tomado;
+  salvarDados(); renderLista(p);
+}
+
+function removerRemedio(p, i) {
+  state.remedios[p].splice(i, 1);
+  salvarDados(); renderLista(p);
+}
+
+function renderLista(p) {
+  const el = document.getElementById('lista-' + p);
+  const lista = state.remedios[p];
+  el.innerHTML = lista.map((r, i) => `
+    <div class="remedio-item ${r.tomado ? 'tomado' : ''}" onclick="toggleTomado('${p}',${i})">
+      <div class="remedio-check ${r.tomado ? 'marcado' : ''}">${r.tomado ? '✓' : ''}</div>
+      <span class="remedio-nome">${r.nome}</span>
+      <button class="del-btn" onclick="event.stopPropagation();removerRemedio('${p}',${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+function renderTudo() {
+  ['manha','tarde','noite','receita'].forEach(renderLista);
+  renderExtras();
+}
+
+// =================== EMAIL ===================
+function enviarEmail(p) {
+  const nomes = { manha:'Manhã 🌅', tarde:'Tarde ☀️', noite:'Noite 🌙', receita:'Receita 📋' };
+  const agora = new Date();
+  const hora  = agora.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+  const data  = agora.toLocaleDateString('pt-BR', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  const lista = state.remedios[p].length > 0
+    ? state.remedios[p].map(r => `• ${r.nome}${r.tomado?' ✓':''}`).join('\n')
+    : '(nenhum remédio cadastrado)';
+
+  const assunto = encodeURIComponent(`PAR — Remédios da ${nomes[p]} tomados às ${hora}`);
+  const corpo   = encodeURIComponent(
+    `✅ Confirmação de medicação — PAR\n\n` +
+    `Período: ${nomes[p]}\nData: ${data}\nHorário: ${hora}\n\n` +
+    `Medicamentos:\n${lista}\n\n---\nEnviado pelo PAR — Painel Auxiliar de Remédios`
+  );
+  window.location.href = `mailto:${EMAIL}?subject=${assunto}&body=${corpo}`;
+  toast(`✉️ Abrindo e-mail — ${nomes[p].split(' ')[0]}...`);
+}
+
+// =================== NOTIFICAÇÕES ===================
+async function pedirNotificacao() {
+  const perm = await Notification.requestPermission();
+  document.getElementById('notif-bar').classList.remove('visivel');
+  if (perm === 'granted') toast('🔔 Notificações ativadas! Alarmes funcionarão em segundo plano.');
+  else toast('Notificações bloqueadas. Ative nas configurações do navegador.', 'erro');
+}
+
+function verificarNotificacao() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'default')
+    document.getElementById('notif-bar').classList.add('visivel');
+}
+
+// =================== INSTALAR PWA ===================
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('install-banner').classList.add('visivel');
+});
+
+async function instalarApp() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  document.getElementById('install-banner').classList.remove('visivel');
+  if (outcome === 'accepted') toast('🎉 PAR instalado! Procure o ícone na sua tela inicial.');
+}
+
+window.addEventListener('appinstalled', () => {
+  toast('✅ App PAR instalado com sucesso!');
+});
+
+// =================== TOAST ===================
+function toast(msg, tipo = '') {
+  const c = document.getElementById('toasts');
+  const t = document.createElement('div');
+  t.className = 'toast' + (tipo ? ' ' + tipo : '');
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => { t.classList.add('saindo'); setTimeout(() => t.remove(), 350); }, 3500);
+}
+
+// =================== INIT ===================
+carregarDados();
+renderTudo();
+
+// Sync toggles
+['manha','tarde','noite'].forEach(p => {
+  if (!state.alarmes[p].ativo) {
+    document.getElementById('toggle-' + p).className = 'alarme-toggle off';
+    document.getElementById('toggle-' + p).textContent = '🔕';
+    document.getElementById('status-' + p).textContent = 'Desativado';
+  }
+});
+
+setInterval(atualizarRelogio, 1000);
+atualizarRelogio();
+
+registrarSW().then(() => {
+  setTimeout(enviarConfigSW, 1000);
+});
+
+verificarNotificacao();
+
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal')) fecharModal();
+});
+
+toast('💊 PAR carregado! Instale o app para alarmes mesmo com tela bloqueada.');
+</script>
+</body>
+</html>
